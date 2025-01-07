@@ -8,14 +8,15 @@ public class CustomErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        if (response.status() >= 400 && response.status() <= 499) {
-            // Client error, handle it
-            return new ClientErrorException(response.status(), "Client error occurred");
-        } else if (response.status() >= 500 && response.status() <= 599) {
-            // Server error, handle it
-            return new ServerErrorException(response.status(), "Server error occurred");
+        int status = response.status();
+        String message = response.reason();
+
+        if (status >= 400 && status < 500) {
+            return new ClientErrorException(status, message);
+        } else if (status >= 500) {
+            return new ServerErrorException(status, message);
         }
-        // Default error handling
-        return new ErrorDecoder.Default().decode(methodKey, response);
+
+        return new RuntimeException("Generic error");
     }
 }

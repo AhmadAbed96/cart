@@ -3,8 +3,8 @@ package com.Link.cartService.Exception;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class NotFond extends RuntimeException {
-    public NotFond(String message) {
+public class NotFound extends RuntimeException {
+    public NotFound(String message) {
         super(message);
     }
 }

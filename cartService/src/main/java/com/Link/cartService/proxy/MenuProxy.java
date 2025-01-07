@@ -1,7 +1,7 @@
 package com.Link.cartService.proxy;
 
 
-import com.Link.cartService.Config.FeignClientConfiguration;
+import com.Link.cartService.Config.FeignClientConfig;
 import com.Link.cartService.Model.Dto.ResponseDto.ItemResponse;
 import com.Link.cartService.Model.Dto.ResponseDto.ItemSizeResponse;
 import com.Link.cartService.Model.Dto.ResponseDto.SizeResponse;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "Menu-Service", url = "http://localhost:8000", configuration = FeignClientConfiguration.class)
+@FeignClient(name = "Menu-Service", url = "http://localhost:8000", configuration = FeignClientConfig.class)
 public interface MenuProxy {
     @GetMapping("/items/GetItemById/{id}")
     public ResponseEntity<ItemResponse> getItemById(@Valid @PathVariable String id);

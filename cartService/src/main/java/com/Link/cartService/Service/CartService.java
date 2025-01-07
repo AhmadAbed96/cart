@@ -1,6 +1,8 @@
 package com.Link.cartService.Service;
 
 import com.Link.cartService.CartRepository;
+import com.Link.cartService.Exception.BadRequest;
+import com.Link.cartService.Exception.NotFound;
 import com.Link.cartService.Mapper.CartMapper;
 import com.Link.cartService.Model.Cart;
 import com.Link.cartService.Model.Dto.RequestDto.ItemCartRequest;
@@ -51,14 +53,14 @@ public class CartService {
 
     public CartResponse getCartById(String id){
         Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cart with ID " + id + " does not exist."));
+                .orElseThrow(() -> new NotFound("Cart with ID " + id + " does not exist."));
         return cartMapper.mapCartToCartResponse(cart);
     }
 
     public void createCart(List<ItemCartRequest> items) {
         if (items == null || items.isEmpty()) {
             log.info("The item list is null or empty");
-            throw new IllegalArgumentException("Items list cannot be null or empty");
+            throw new BadRequest("Items list cannot be null or empty");
         }
 
         Map<String, ItemCartRequest> uniqueItemsMap = new HashMap<>();
@@ -69,7 +71,7 @@ public class CartService {
             ResponseEntity<Boolean> response = menuProxy.checkStatus(itemCart.getItemId(), itemCart.getSizeId());
             SizeResponse size = menuProxy.getSizeById(itemCart.getSizeId()).getBody();
             if (response.getBody() == null || !response.getBody()) {
-                throw new IllegalArgumentException("Item with ID " + itemCart.getItemId() + " is not available.");
+                throw new NotFound("Item with ID " + itemCart.getItemId() + " is not available.");
             }
 
             String uniqueKey = itemCart.getItemId() + "_" + itemCart.getSizeId();
@@ -87,7 +89,7 @@ public class CartService {
 
             SizeResponse sizeResponse = menuProxy.getSizeById(validItem.getSizeId()).getBody();
             if (sizeResponse == null) {
-                throw new IllegalArgumentException("Failed to fetch item details for ID " + validItem.getItemId());
+                throw new NotFound("Failed to fetch item details for ID " + validItem.getItemId());
             }
             totalPrice += sizeResponse.getPrice() * validItem.getQuantity();
             totalQuantity += validItem.getQuantity();
@@ -102,16 +104,16 @@ public class CartService {
                     .build();
             cartRepository.save(cart);
         } else {
-            throw new IllegalStateException("No valid items to create the cart.");
+            throw new BadRequest("No valid items to create the cart.");
         }
     }
 
     public void addItemsToCart(String cartId, List<ItemCartRequest> items) {
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("Items list cannot be null or empty");
+            throw new BadRequest("Items list cannot be null or empty");
         }
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart with ID " + cartId + " does not exist."));
+                .orElseThrow(() -> new NotFound("Cart with ID " + cartId + " does not exist."));
 
         Map<String, ItemCartRequest> existingItemsMap = new HashMap<>();
         for (ItemCartRequest existingItem : cart.getItem()) {
@@ -126,7 +128,7 @@ public class CartService {
             ResponseEntity<Boolean> response = menuProxy.checkStatus(itemCart.getItemId(), itemCart.getSizeId());
 
             if (response.getBody() == null || !response.getBody()) {
-                throw new IllegalArgumentException("Item with ID " + itemCart.getItemId() + " is not available.");
+                throw new NotFound("Item with ID " + itemCart.getItemId() + " is not available.");
             }
 
             String uniqueKey = itemCart.getItemId() + "_" + itemCart.getSizeId();
@@ -144,7 +146,7 @@ public class CartService {
         for (ItemCartRequest updatedItem : updatedItems) {
             SizeResponse sizeResponse = menuProxy.getSizeById(updatedItem.getSizeId()).getBody();
             if (sizeResponse == null) {
-                throw new IllegalArgumentException("Failed to fetch item details for ID " + updatedItem.getItemId());
+                throw new NotFound("Failed to fetch item details for ID " + updatedItem.getItemId());
             }
             updatedTotalPrice += sizeResponse.getPrice() * updatedItem.getQuantity();
             updatedTotalQuantity += updatedItem.getQuantity();
@@ -179,11 +181,11 @@ public class CartService {
 
     public void decreaseItem(String cartId, String itemId, String sizeId) {
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart with ID " + cartId + " does not exist."));
+                .orElseThrow(() -> new NotFound("Cart with ID " + cartId + " does not exist."));
         ResponseEntity<Boolean> response = menuProxy.checkStatus(itemId, sizeId);
 
         if (response.getBody() == null || !response.getBody()) {
-            throw new IllegalArgumentException("Item with ID " + itemId + " is not available.");
+            throw new NotFound("Item with ID " + itemId + " is not available.");
         }
 
         SizeResponse sizeResponse = menuProxy.getSizeById(sizeId).getBody();
@@ -191,7 +193,7 @@ public class CartService {
         ItemCartRequest itemCart = cart.getItem().stream()
                 .filter(i -> i.getItemId().equals(itemId) && i.getSizeId().equals(sizeId))
                 .findFirst()
-                .orElseThrow(()-> new RuntimeException("the item not found"));
+                .orElseThrow(()-> new NotFound("the item not found"));
         if (itemCart.getQuantity() > 0){
             itemCart.setQuantity(itemCart.getQuantity()-1);
             cart.setTotalQuantity(cart.getTotalQuantity()-1);
@@ -203,18 +205,18 @@ public class CartService {
 
     public void deleteCartItem(String cartId, String itemId, String sizeId){
          Cart cart = cartRepository.findById(cartId)
-                 .orElseThrow(() -> new RuntimeException("the cart not found"));
+                 .orElseThrow(() -> new NotFound("the cart not found"));
         ItemCartRequest itemCart= cart.getItem()
                 .stream()
                 .filter(item-> item.getItemId().equals(itemId) && item.getSizeId().equals(sizeId))
                 .findFirst()
-                .orElseThrow(()-> new RuntimeException("the item not found"));
+                .orElseThrow(()-> new NotFound("the item not found"));
          boolean itemRemoved  = cart.getItem()
                  .removeIf(item -> item.getItemId().equals(itemId) && item.getSizeId().equals(sizeId));
 
         SizeResponse sizeResponse = menuProxy.getSizeById(sizeId).getBody();
         if (!itemRemoved){
-                throw new RuntimeException("the item not found");
+                throw new NotFound("the item not found");
             }
 
             cart.setTotalQuantity(cart.getTotalQuantity()-itemCart.getQuantity());
