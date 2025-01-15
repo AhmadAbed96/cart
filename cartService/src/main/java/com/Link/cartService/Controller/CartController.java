@@ -2,6 +2,7 @@ package com.Link.cartService.Controller;
 
 
 import com.Link.cartService.Model.Cart;
+import com.Link.cartService.Model.Dto.RequestDto.CartRequest;
 import com.Link.cartService.Model.Dto.RequestDto.ItemCartRequest;
 import com.Link.cartService.Model.Dto.ResponseDto.CartResponse;
 import com.Link.cartService.Model.Dto.ResponseDto.ItemResponse;
@@ -12,10 +13,11 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+//@Validated
 @Slf4j
 @RequestMapping("/cart")
 @RestController
@@ -34,11 +36,17 @@ public class CartController {
     }
 
     @PostMapping("/createCart")
-    public ResponseEntity<String> createCart( @RequestBody List<ItemCartRequest> items)
+    public ResponseEntity<String> createCart(@RequestBody @Valid CartRequest items)
     {
         log.info("inside controller");
-        cartService.createCart(items);
+        cartService.createCart(items.getItems());
         return ResponseEntity.ok("the cart created");
+    }
+
+    @PostMapping("/kkkk")
+    public ResponseEntity<String> createCarthh( @Valid @RequestBody  ItemCartRequest items)
+    {
+        return ResponseEntity.ok("a");
     }
 //    @PutMapping("/updateCart/{id}")
 //    public ResponseEntity<String> updateCart(@PathVariable String id, @RequestBody List<ItemCartRequest> updatedItems){

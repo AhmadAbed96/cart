@@ -161,7 +161,7 @@ public class CartService {
 
     public void increaseItem(String cartId, String itemId, String sizeId) {
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart with ID " + cartId + " does not exist."));
+                .orElseThrow(() -> new NotFound("Cart with ID " + cartId + " does not exist."));
         ResponseEntity<Boolean> response = menuProxy.checkStatus(itemId, sizeId);
         if (response.getBody() == null || !response.getBody()) {
             throw new IllegalArgumentException("Item with ID " + itemId + " is not available.");
